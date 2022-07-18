@@ -37,7 +37,7 @@ main(int argc, char **argv)
 	}
 
 	// Se inicia un trace haciendo un fork, segun lo recomendado en el manual
-	pid_t pid = fork(); 
+	pid_t pid = fork();
 	// char *filename = argv[1];
 
 	switch (pid) {
@@ -46,12 +46,12 @@ main(int argc, char **argv)
 		log_(L_ERROR, "Error happened while fork()");
 		break;
 	case 0:
-	    /*  
-            El hijo tendra que indidcar al padre que le haga unseguimeinto.
-            Para ello se utiliza PTRACE_TRACEME.
-            - pid,addr y data debern ser ignorados. 
-            Acto seguido, se ejecuta un execvp.
-        */
+		/*
+		El hijo tendra que indidcar al padre que le haga unseguimeinto.
+		Para ello se utiliza PTRACE_TRACEME.
+		- pid,addr y data debern ser ignorados.
+		Acto seguido, se ejecuta un execvp.
+	    */
 		ptrace(PTRACE_TRACEME, 0, 0, 0);
 		execvp(argv[1], argv + 1);
 		break;
@@ -59,26 +59,36 @@ main(int argc, char **argv)
 		break;
 	}
 
-    /* 
-        Recomendado por el manual : "When the tracee is in ptrace-stop, the tracer can read and write
-        data to the tracee using informational commands."
-        Una vez hecho el wait, sera necesario indicarle a ptrace con los siguente flags:
-        - PTRACE_SETOPTIONS que permitira que tipo de data queremos obtener
-        - PTRACE_O_TRACESYSGOOD es la mascara que utilizaremos para que el tracer pueda distinguir entre 
-        los traps producidor por las syscalls
-    */   
+	/*
+	    Recomendado por el manual : "When the tracee is in ptrace-stop, the
+	   tracer can read and write data to the tracee using informational
+	   commands." Una vez hecho el wait, sera necesario indicarle a ptrace
+	   con los siguente flags:
+	    - PTRACE_SETOPTIONS que permitira que tipo de data queremos obtener
+	    - PTRACE_O_TRACESYSGOOD es la mascara que utilizaremos para que el
+	   tracer pueda distinguir entre los traps producidor por las syscalls
+	*/
 	waitpid(pid, 0, 0);
 	ptrace(PTRACE_SETOPTIONS, pid, 0, PTRACE_O_TRACESYSGOOD);
-	
-    /*
-        Con un loop iremos recorriendo los llamados de las syscals
-        1) PTRACE_SYSCALL: Nos permite que el trace se detenga cuando una syscall es llamada a ejecutarse.
-            En caso de error, se hara un exit
-        2) PTRACE_GETREGS y PTRACE_GET_SYSCALL_INFO: Podremos obtener la informacion de la syscall y de los registros
-        3) Sera necesario hace otro llamado a PTRACE_SYSCALL para que continue con la proxima intruccion
 
-    */
+	/*
+	    Con un loop iremos recorriendo los llamados de las syscals
+	    1) PTRACE_SYSCALL: Nos permite que el trace se detenga cuando una
+	   syscall es llamada a ejecutarse. En caso de error, se hara un exit 2)
+	   PTRACE_GETREGS y PTRACE_GET_SYSCALL_INFO: Podremos obtener la
+	   informacion de la syscall y de los registros 3) Sera necesario hace
+	   otro llamado a PTRACE_SYSCALL para que continue con la proxima
+	   intruccion
+
+	*/
 	for (;;) {
+		/*
+		    Con el primer PTRACE_SYSCALL se hacen los arreglos para
+		   que el proceso hijo se detenga al entrar a una syscall, y con
+		   el segundo para que se detenga al salir de esa syscall. En la
+		   primer oportunidad pueden obtenerse los argumentos de la
+		   llamada al sistema, y en la segunda, el valor de retorno.
+		*/
 		if (ptrace(PTRACE_SYSCALL, pid, 0, 0) == -1) {
 			log_(L_ERROR, "+++ exited with 0 +++");
 		}
@@ -88,23 +98,21 @@ main(int argc, char **argv)
 
 		struct user_regs_struct regs;
 		ptrace(PTRACE_GETREGS, pid, 0, &regs);
-		struct ptrace_syscall_info sys_info;
-		ptrace(PTRACE_GET_SYSCALL_INFO,
-		       pid,
-		       sizeof(struct ptrace_syscall_info),
-		       &sys_info);
-
-		if (regs.orig_rax < 335) {
-			print_info(sys_info, regs);
-		}
 
 		if (regs.orig_rax == 252)
 			exit(0);  // exit_group syscall
 
 		if (ptrace(PTRACE_SYSCALL, pid, 0, 0) == -1)
 			log_(L_ERROR, "+++ exited with 0 +++");
-
 		waitpid(pid, 0, 0);
+		struct ptrace_syscall_info sys_info;
+		ptrace(PTRACE_GET_SYSCALL_INFO,
+		       pid,
+		       sizeof(struct ptrace_syscall_info),
+		       &sys_info);
+		if (regs.orig_rax < 335) {
+			print_info(sys_info, regs);
+		}
 	}
 }
 
