@@ -2,3 +2,9 @@ find.c
 pingpong.c
 primes.c
 xargs.c
+ls.c
+cp.c
+ps.c
+timeout.c
+util.c
+util.h
