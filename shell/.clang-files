@@ -19,3 +19,9 @@ sh.c
 types.h
 utils.c
 utils.h
+set_input_mode.c
+set_input_mode.h
+lista.c 
+lista.h
+history.c
+history.h

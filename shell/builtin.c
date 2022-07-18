@@ -1,4 +1,6 @@
 #include "builtin.h"
+#include "history.h"
+#include "utils.h"
 
 // returns true if the 'exit' call
 // should be performed
@@ -32,6 +34,9 @@ cd(char *cmd)
 
 	if (strcmp(cmd, "cd") == 0 || strcmp(cmd, "cd ") == 0) {
 		dir = getenv("HOME");
+		if (!getcwd(promt, PRMTLEN)) {
+			return -1;
+		}
 	} else if (strncmp(cmd, "cd ", 3) == 0) {
 		dir = cmd + 3;
 	} else {
@@ -71,4 +76,21 @@ pwd(char *cmd)
 		status = 2;
 
 	return 1;
+}
+
+// Implemento `history` como un comando built-in
+// Este debe ser asi ya que sera la shell la que actualize la historia cada vez que se ejecute un comando
+int
+history(char *cmd)
+{
+	char *_cmd = strdup(cmd);
+	split_line(_cmd, SPACE);
+
+	if (!strcmp(_cmd, "history")) {
+		int n = atoi(_cmd + 8);
+		status = history_cmd(n);
+		return 1;
+	}
+	free(_cmd);
+	return 0;
 }

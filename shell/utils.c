@@ -11,6 +11,9 @@ split_line(char *buf, char splitter)
 	while (buf[i] != splitter && buf[i] != END_STRING)
 		i++;
 
+	if (buf[i] == END_STRING)
+		return &buf[i];
+
 	buf[i++] = END_STRING;
 
 	while (buf[i] == SPACE)
@@ -44,6 +47,15 @@ printf_debug(char *format, ...)
 	va_end(args);
 
 	return ret;
+#else
+	return 0;
+#endif
+}
+int
+putchar_debug(char c)
+{
+#ifndef SHELL_NO_INTERACTIVE
+	return putchar(c);
 #else
 	return 0;
 #endif

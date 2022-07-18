@@ -2,6 +2,8 @@
 #include "types.h"
 #include "readline.h"
 #include "runcmd.h"
+#include "set_input_mode.h"
+#include "history.h"
 
 char promt[PRMTLEN] = { 0 };
 
@@ -21,6 +23,7 @@ run_shell()
 static void
 init_shell()
 {
+	set_input_mode();
 	char buf[BUFLEN] = { 0 };
 	char *home = getenv("HOME");
 
@@ -30,6 +33,7 @@ init_shell()
 	} else {
 		snprintf(promt, sizeof promt, "(%s)", home);
 	}
+	init_history();
 }
 
 int

@@ -27,6 +27,10 @@ run_cmd(char *cmd)
 	if (pwd(cmd))
 		return 0;
 
+	// "history" buil-in call
+	if (history(cmd))
+		return 0;
+
 	// parses the command line
 	parsed = parse_line(cmd);
 
@@ -54,7 +58,11 @@ run_cmd(char *cmd)
 	// Your code here
 
 	// waits for the process to finish
-	waitpid(p, &status, 0);
+	if (parsed->type == BACK) {
+		waitpid(p, &status, WNOHANG);
+	} else {
+		waitpid(p, &status, 0);
+	}
 
 	print_status_info(parsed);
 

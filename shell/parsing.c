@@ -1,4 +1,5 @@
 #include "parsing.h"
+#include "history.h"
 
 // parses an argument of the command stream input
 static char *
@@ -101,22 +102,40 @@ parse_environ_var(struct execcmd *c, char *arg)
 static char *
 expand_environ_var(char *arg)
 {
+	// Expand environ var
 	if (arg[0] == '$') {
 		if (arg[1] == '?') {
 			sprintf(arg, "%d", status);
 			return arg;
 		}
-		char *env = getenv(arg + 1);
-		if (!env || strlen(env) == 0)
-			return NULL;
 
+		char *envvar = getenv(arg + 1);
 
-		if (strlen(env) > strlen(arg))
-			arg = (char *) realloc(arg, sizeof(char) * strlen(env));
+		if (envvar == NULL) {
+			strcpy(arg, "");
+			return arg;
+		}
 
-		strcpy(arg, env);
+		arg = realloc(arg, sizeof(envvar) + 1);
+		strcpy(arg, envvar);
+		return arg;
 	}
 
+	// Expand Event Designators
+	if (arg[0] == '!') {
+		switch (arg[1]) {
+		case '!':
+			strcpy(arg, hist_get(2));
+			break;
+		case '-':
+			strcpy(arg, hist_get(atoi(arg + 2) + 1));
+			break;
+		default:
+			strcpy(arg, "");
+			break;
+		}
+		return arg;
+	}
 	return arg;
 }
 
