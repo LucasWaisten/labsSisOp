@@ -130,7 +130,7 @@ history_cmd(int n)
 		fseek(hist_file, 0, SEEK_SET);
 
 		if (lines_count > n)
-			for (int i = 0; i < n; i++)
+			for (int i = 0; i < lines_count - n; i++)
 				getline(&line, &len, hist_file);
 	}
 
@@ -139,5 +139,6 @@ history_cmd(int n)
 
 	fclose(hist_file);
 	hist_file = fopen(hist_f_dir, "a");
+	free(line);
 	return 0;
 }

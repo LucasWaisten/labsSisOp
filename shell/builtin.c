@@ -89,6 +89,7 @@ history(char *cmd)
 	if (!strcmp(_cmd, "history")) {
 		int n = atoi(_cmd + 8);
 		status = history_cmd(n);
+		free(_cmd);
 		return 1;
 	}
 	free(_cmd);
