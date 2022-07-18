@@ -2,3 +2,5 @@ find.c
 pingpong.c
 primes.c
 xargs.c
+strace.c
+syscallent.h
